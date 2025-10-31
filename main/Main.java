@@ -77,19 +77,6 @@ public class Main {
                     productService.addProduct(product);
                     System.out.println("Product added successfully!");
                 }
-
-                // Quantity
-                int quantity;
-                while (true) {
-                    System.out.print("Enter quantity: ");
-                    try {
-                        quantity = Integer.parseInt(sc.nextLine());
-                        if (quantity >= 0) break;
-                        System.out.println("Quantity cannot be negative.");
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid quantity. Please enter a whole number.");
-                    }
-                }
                 
                 case 2 -> {
                     System.out.println("\nAvailable Items:");

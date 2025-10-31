@@ -16,7 +16,6 @@ public class ProductService {
                 product.getBrand() + "," + product.getPrice() + "," +
                 product.getQuantity();
         FileHandler.writeLine(FILE_PATH, line);
-        System.out.println("Product added successfully!");
     }
 
     public List<Product> getAllProducts() {
