@@ -8,11 +8,14 @@ import model.Sale;
 import model.Store;
 import model.Employee;
 import model.Role;
+import model.Truck;
 import model.StoreInventoryItem;
 import service.ProductService;
 import service.SalesService;
 import service.StoreService;
 import service.InventoryService;
+import service.TruckService;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import util.PriceHistoryHandler;
@@ -24,6 +27,7 @@ public class Main {
         SalesService salesService = new SalesService();
         StoreService storeService = new StoreService();
         InventoryService inventoryService = new InventoryService();
+        TruckService truckService = new TruckService();
 
         boolean running = true;
 
@@ -41,13 +45,14 @@ public class Main {
             System.out.println("9. Manage Stores");
             System.out.println("10. Manage Employees");
             System.out.println("11. Manage Inventory");
-            System.out.println("12. Search Product by Name/Brand");
-            System.out.println("13. Void a Transaction");
-            System.out.println("14. View Total Revenue Summary");
-            System.out.println("15. Mark Discontinued Item");
-            System.out.println("16. Return an Item");
-            System.out.println("17. Revive Discontinued Item");
-            System.out.println("18. Quit");
+            System.out.println("12. Manage Trucks");
+            System.out.println("13. Search Product by Name/Brand");
+            System.out.println("14. Void a Transaction");
+            System.out.println("15. View Total Revenue Summary");
+            System.out.println("16. Mark Discontinued Item");
+            System.out.println("17. Return an Item");
+            System.out.println("18. Revive Discontinued Item");
+            System.out.println("19. Quit");
             System.out.print("Select option: ");
             int choice = sc.nextInt();
             sc.nextLine(); // clear buffer
@@ -909,6 +914,146 @@ public class Main {
                 }
 
                 case 12 -> {
+                    System.out.println("\n===== Manage Trucks =====");
+                    System.out.println("1. View All Trucks");
+                    System.out.println("2. Add New Truck");
+                    System.out.println("3. Back to Main Menu");
+                    System.out.print("Select option: ");
+                    int truckChoice = sc.nextInt();
+                    sc.nextLine();
+
+                    switch (truckChoice) {
+                        case 1 -> {
+                            // View all trucks
+                            System.out.println("\n===== All Trucks =====");
+                            var trucks = truckService.getAllTrucks();
+                            if (trucks.isEmpty()) {
+                                System.out.println("No trucks found.");
+                            }
+                            else {
+                                for (Truck truck : trucks) {
+                                    String cargoSummary;
+                                    if (truck.getCargo().isEmpty()) {
+                                        cargoSummary = "No items";
+                                    }
+                                    else {
+                                        cargoSummary = String.join(", ", truck.getCargo());
+                                    }
+
+                                    System.out.printf("TruckID: %d | Destination: %s | Distance: %d miles \n -> Cargo: %s%n",
+                                            truck.getTruckId(),
+                                            truck.getDestinationStore(),
+                                            truck.getDistanceMiles(),
+                                            cargoSummary);
+                                }
+                            }
+                        }
+
+                        case 2 -> {
+                            // Add new truck
+                            System.out.println("\n===== Add New Truck =====");
+                            int truckId = truckService.getNextTruckId();
+
+                            // Select store
+                            var stores = storeService.getAllStores();
+                            if (stores.isEmpty()) {
+                                System.out.println("No stores found.");
+                                break;
+                            }
+
+                            System.out.println("\nAvailable Stores:");
+                            stores.forEach(System.out::println);
+
+                            int storeId;
+                            while (true) {
+                                System.out.println("Enter store ID to assign truck to: ");
+                                try {
+                                    storeId = Integer.parseInt(sc.nextLine());
+                                    if (storeService.getStoreById(storeId) == null) {
+                                        System.out.println("Store not found.");
+                                    }
+                                    break;
+                                } catch (NumberFormatException e) {
+                                    System.out.println("Invalid input. Please enter a number.");
+                                }
+                            }
+
+                            Store store = storeService.getStoreById(storeId);
+
+                            // Distance from store
+                            int distance;
+
+                            while (true) {
+                                System.out.println("Please enter truck distance from store (in miles): ");
+                                try {
+                                    distance = Integer.parseInt(sc.nextLine());
+                                    if (distance <= 0) {
+                                        System.out.println("Distance cannot be negative.");
+                                    }
+                                    break;
+                                } catch (NumberFormatException e) {
+                                    System.out.println("Invalid input. Please enter a number.");
+                                }
+                            }
+
+                            // Create truck
+                            Truck truck = new Truck(truckId, store.getName(), distance);
+
+                            // Add cargo
+                           var products = productService.getAllProducts();
+                           if (!products.isEmpty()) {
+                               System.out.println("\nAdd Cargo to Truck:");
+                               products.forEach(p -> System.out.println(p.getId() + ": " + p.getName() + " (" + p.getBrand() + ")"));
+                           }
+
+                           while (true) {
+                               System.out.println("Please enter product ID to add product (0 to finish)");
+                               int productId;
+                               try {
+                                   productId = Integer.parseInt(sc.nextLine());
+
+                                   if (productId == 0) {
+                                       break;
+                                   }
+                                   Product product = productService.getProductById(productId);
+                                   if (product == null) {
+                                       System.out.println("Product not found.");
+                                   } else {
+                                       int quantity;
+                                       while (true) {
+                                           System.out.println("Enter quantity for " + product.getName() + ": ");
+                                           try {
+                                               quantity = Integer.parseInt(sc.nextLine());
+                                               if (quantity <= 0) {
+                                                   System.out.println("Quantity cannot be negative.");
+                                               }
+                                               break;
+                                           } catch (NumberFormatException e) {
+                                               System.out.println("Invalid input. Please enter a number.");
+                                           }
+                                       }
+                                       String cargoItem = product.getName() + " (" + product.getBrand() + ") x" + quantity ;
+                                       truck.addCargo(cargoItem);
+                                       System.out.println("Added " + cargoItem + " to truck");
+                                   }
+                               } catch (NumberFormatException e) {
+                                   System.out.println("Invalid input. Please enter a number.");
+                               }
+                           }
+
+                            // Create truck and assign to store
+                            truckService.addTruck(truck);
+
+                            System.out.println("Truck added successfully!");
+                        }
+                        case 3 -> {
+                            // Back to main menu
+                        }
+
+                    }
+                }
+
+                case 13 -> {
                     System.out.println("\n===== Search Product by Name/Brand =====");
 
                     String keyword;
@@ -948,7 +1093,7 @@ public class Main {
                     }
                 }
                 
-                case 13 -> {
+                case 14 -> {
                     System.out.println("\n===== Void a Transaction =====");
 
                     var sales = salesService.getAllSales();
@@ -981,12 +1126,12 @@ public class Main {
                 }
 
                 // View Total Revenue Summary
-                case 14 -> {
+                case 15 -> {
                     System.out.println("\n===== Total Revenue Summary =====");
                     salesService.printRevenueSummary(storeService, productService);
                 }
 
-                case 15 -> {
+                case 16 -> {
                     System.out.println("\n===== Mark a Discontinued Item =====");
                     //find item
                     //remove item from products list
@@ -1007,7 +1152,7 @@ public class Main {
 
                 }
 
-                case 16 -> {
+                case 17 -> {
                     System.out.println("\n===== Return an Item =====");
                     //find Item ID
                     //find Sale ID
@@ -1028,7 +1173,7 @@ public class Main {
 
                 }
 
-                case 17 -> {
+                case 18 -> {
                     System.out.println("\n===== Reviving a Discontinued Item =====");
                     //find item
                     //remove item from products list
@@ -1047,7 +1192,7 @@ public class Main {
                     System.out.println("Revived " + id + " from the Discontinued Products.");
                 }
 
-                case 18 -> {
+                case 19 -> {
                     System.out.print("=== Goodbye ===");
                     running = false; // End program
                 }

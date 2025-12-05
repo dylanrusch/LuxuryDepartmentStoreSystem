@@ -1,2 +1,2 @@
 112,Test Hoodie,Gucci,10000.0,Gucci
-113,Test Shoe,Gucci,500.0,Gucci
+113,Test Shoe,Gucci,500.0,Gucci101,Leather Handbag,Accessories,900.0,Gucci
