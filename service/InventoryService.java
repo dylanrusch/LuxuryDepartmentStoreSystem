@@ -1,10 +1,13 @@
 // java
 package service;
 
+import model.Product;
+import model.Store;
 import model.StoreInventoryItem;
 import util.FileHandler;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class InventoryService {
     private static final String INVENTORY_FILE_PATH = "data/inventory.txt";
@@ -118,6 +121,10 @@ public class InventoryService {
         }
     }
 
+    /*
+        Author: Dylan Rusch (next 2 functions)
+     */
+
     // Create a list of items whos quantity is below a certain threshold
     public List<StoreInventoryItem> getLowStockItems(int threshold) {
         List<StoreInventoryItem> lowStock = new ArrayList<>();
@@ -127,5 +134,23 @@ public class InventoryService {
             }
         }
         return lowStock;
+    }
+
+    // Print all low stock items
+    public void printLowStockItems(Store store, List<StoreInventoryItem> lowStockItems, ProductService productService) {
+        System.out.println("\nStore: " + store.getName());
+        boolean hasLowStock = false;
+
+        for (StoreInventoryItem item : lowStockItems) {
+            if (item.getStoreId() == store.getStoreId()) {
+                Product p = productService.getProductById(item.getProductId());
+                System.out.printf(" - %s (Qty: %d)%n", p.getName(), item.getQuantity());
+                hasLowStock = true;
+            }
+        }
+
+        if (!hasLowStock) {
+            System.out.println("No low stock items at this store.");
+        }
     }
 }

@@ -1,6 +1,7 @@
 package service;
 
 import model.Sale;
+import model.Store;
 import util.FileHandler;
 
 import java.util.ArrayList;
@@ -67,4 +68,27 @@ public class SalesService {
         FileHandler.writeAllLines(FILE_PATH, updatedLines);
         System.out.println("Sale with ID " + saleId + " removed (if it existed).");
     }
+
+    public void printRevenueSummary(StoreService storeService, ProductService productService) {
+        List<Sale> sales = getAllSales();
+        List<Store> stores = storeService.getAllStores();
+
+        double grandTotal = 0;
+        System.out.println("\nStore | Revenue ($)");
+        System.out.println("-------------------");
+
+        for (Store s : stores) {
+            double total = 0;
+            for (Sale sale : sales) {
+                if (sale.getStoreId() == s.getStoreId()) {
+                    total += sale.getTotalPrice();
+                }
+            }
+            System.out.printf("%s | %.2f%n", s.getName(), total);
+            grandTotal += total;
+        }
+        System.out.println("-------------------");
+        System.out.printf("Grand Total Revenue = $%.2f%n", grandTotal);
+    }
+
 }

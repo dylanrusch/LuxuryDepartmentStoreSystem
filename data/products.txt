@@ -1,11 +1,11 @@
-101,Leather Handbag,Accessories,900.0,Gucci
 102,Sneakers,Footwear,1200.0,Gucci
 103,Wool Coat,Clothing,1850.0,Prada
 104,Silk Scarf,Accessories,650.0,Burberry
 105,Submariner Watch,Watches,9800.0,Rolex
 106,Blue Tie,Accessories,310.0,Hermes
 107,No.5 Perfume,Fragrance,210.0,Chanel
-108,SlickBack Sunglasses,Accessories,490.0,Versace
+108,SlickBack Sunglasses,Accessories,465.5,Versace
 109,Velvet Evening Gown,Clothing,2750.0,Dior
 110,Black Hoodie,Clothing,995.0,Balenciaga
 111,White Hoodie,Clothing,2086.5,Gucci
+114,Hairclip,Gucci,800.0,Gucci

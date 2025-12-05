@@ -15,7 +15,6 @@ import service.SalesService;
 import service.StoreService;
 import service.InventoryService;
 import service.TruckService;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -49,7 +48,11 @@ public class Main {
             System.out.println("12. Manage Trucks");
             System.out.println("13. Search Product by Name/Brand");
             System.out.println("14. Void a Transaction");
-            System.out.println("15. Quit");
+            System.out.println("15. View Total Revenue Summary");
+            System.out.println("16. Mark Discontinued Item");
+            System.out.println("17. Return an Item");
+            System.out.println("18. Revive Discontinued Item");
+            System.out.println("19. Quit");
             System.out.print("Select option: ");
             int choice = sc.nextInt();
             sc.nextLine(); // clear buffer
@@ -336,12 +339,19 @@ public class Main {
                 }
                 case 5 -> {
                     System.out.println("\n===== Low Stock Alerts =====");
-                    //System.out.println("1. All Stores");
-                    //System.out.println("2. By Specific Store");
-                    //System.out.println("Select Option: ");
-                    //int option = sc.nextInt();
 
+                    System.out.println("1. All Stores");
+                    System.out.println("2. By Specific Store");
+                    System.out.println("Select Option: ");
+                    int option;
+                    try {
+                        option = Integer.parseInt(sc.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid Input.");
+                        break;
+                    }
 
+                    // Get low stock threshold
                     System.out.print("Enter quantity threshold: ");
                     int threshold;
                     try {
@@ -351,22 +361,52 @@ public class Main {
                         break;
                     }
 
-                    if (threshold < 0) {
+                    if (threshold <= 0) {
                         System.out.println("Threshold cannot be negative.");
                         break;
                     }
 
-                    // Fetch low stock items list
-                    var lowStockItems = inventoryService.getLowStockItems(threshold);
-
-                    if (lowStockItems.isEmpty()) {
-                        System.out.println("No low stock items.");
+                    var allStores = storeService.getAllStores();
+                    if (allStores.isEmpty()) {
+                        System.out.println("No stores available");
+                        break;
                     }
-                    else {
-                        for (StoreInventoryItem item : lowStockItems) {
-                            Product p = productService.getProductById(item.getProductId());
-                            System.out.printf("%s - Qty: %d%n", p.getName(), item.getQuantity());
+
+                    // Fetch low stock items list
+                    List<StoreInventoryItem> lowStockItems = inventoryService.getLowStockItems(threshold);
+
+                    // Filter by all stores
+                    if (option == 1) {
+                        for (Store store : allStores) {
+                            inventoryService.printLowStockItems(store, lowStockItems, productService);
                         }
+                    }
+
+                    // Filter by specific store
+                    else if (option == 2) {
+                        System.out.println("\nAvailable Stores:");
+                        allStores.forEach(System.out::println);
+
+                        System.out.println("Enter store ID: ");
+                        int storeId;
+                        try {
+                            storeId = Integer.parseInt(sc.nextLine());
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid store ID.");
+                            break;
+                        }
+
+                        Store store = storeService.getStoreById(storeId);
+                        if (store == null) {
+                            System.out.println("Store not found.");
+                            break;
+                        }
+
+                        inventoryService.printLowStockItems(store, lowStockItems, productService);
+                    }
+                    // Invalid option selected
+                    else {
+                        System.out.println("Invalid option.");
                     }
                 }
 
@@ -672,8 +712,9 @@ public class Main {
                     System.out.println("\n===== Manage Inventory =====");
                     System.out.println("1. View All Inventory");
                     System.out.println("2. View Inventory by Store");
-                    //System.out.println("3. Add Stock to Store");
-                    System.out.println("4. Back to Main Menu");
+                    System.out.println("3. Restock Existing Item");
+                    System.out.println("4. Add Products to Store");
+                    System.out.println("5. Back to Main Menu");
                     System.out.print("Select option: ");
                     int invChoice = sc.nextInt();
                     sc.nextLine();
@@ -734,112 +775,138 @@ public class Main {
                                 }
                             }
                         }
-                        case 3 -> {
-                            // Add Stock to Store
-//                            var products = productService.getAllProducts();
-//                            if (products.isEmpty()) {
-//                                System.out.println("No products in catalog. Add products first.");
-//                                break;
-//                            }
-//
-//                            var stores = storeService.getAllStores();
-//                            if (stores.isEmpty()) {
-//                                System.out.println("No stores found. Add stores first.");
-//                                break;
-//                            }
-//
-//                            System.out.println("\nAvailable Products:");
-//                            products.forEach(System.out::println);
-//
-//                            System.out.print("\nEnter product ID: ");
-//                            int productId;
-//                            try {
-//                                productId = Integer.parseInt(sc.nextLine());
-//                            } catch (NumberFormatException e) {
-//                                System.out.println("Invalid product ID.");
-//                                break;
-//                            }
-//
-//                            Product product = productService.getProductById(productId);
-//                            if (product == null) {
-//                                System.out.println("Product not found.");
-//                                break;
-//                            }
-//
-//                            System.out.println("\nAvailable Stores:");
-//                            stores.forEach(System.out::println);
-//
-//                            System.out.print("\nEnter store ID: ");
-//                            int storeId;
-//                            try {
-//                                storeId = Integer.parseInt(sc.nextLine());
-//                            } catch (NumberFormatException e) {
-//                                System.out.println("Invalid store ID.");
-//                                break;
-//                            }
-//
-//                            Store store = storeService.getStoreById(storeId);
-//                            if (store == null) {
-//                                System.out.println("Store not found.");
-//                                break;
-//                            }
 
-                            // Check if inventory item already exists
-//                            StoreInventoryItem existing = inventoryService.getByProductAndStore(productId, storeId);
-//                            if (existing != null) {
-//                                System.out.println("This product already has inventory at this store.");
-//                                System.out.println("Current quantity: " + existing.getQuantity());
-//                                System.out.print("Add more quantity? (y/n): ");
-//                                String confirm = sc.nextLine().trim().toLowerCase();
-//                                if (confirm.equals("y") || confirm.equals("yes")) {
-//                                    System.out.print("Enter quantity to add: ");
-//                                    int addQty;
-//                                    try {
-//                                        addQty = Integer.parseInt(sc.nextLine());
-//                                        if (addQty > 0) {
-//                                            inventoryService.adjustQuantity(existing.getId(), addQty);
-//                                            System.out.println("Quantity added successfully! New quantity: " + (existing.getQuantity() + addQty));
-//                                        } else {
-//                                            System.out.println("Quantity must be positive.");
-//                                        }
-//                                    } catch (NumberFormatException e) {
-//                                        System.out.println("Invalid quantity.");
-//                                    }
-//                                }
-//                                break;
-//                            }
-//
-//                            System.out.print("Enter quantity: ");
-//                            int quantity;
-//                            try {
-//                                quantity = Integer.parseInt(sc.nextLine());
-//                                if (quantity < 0) {
-//                                    System.out.println("Quantity cannot be negative.");
-//                                    break;
-//                                }
-//                            } catch (NumberFormatException e) {
-//                                System.out.println("Invalid quantity.");
-//                                break;
-//                            }
-//
-//                            System.out.print("Override price for this store? (y/n): ");
-//                            String overrideChoice = sc.nextLine().trim().toLowerCase();
-//                            Double priceOverride = null;
-//                            if (overrideChoice.equals("y") || overrideChoice.equals("yes")) {
-//                                System.out.print("Enter store-specific price: ");
-//                                try {
-//                                    priceOverride = Double.parseDouble(sc.nextLine());
-//                                } catch (NumberFormatException e) {
-//                                    System.out.println("Invalid price. Using catalog price.");
-//                                }
-//                            }
-//
-//                            int invId = inventoryService.getNextInventoryId();
-//                            StoreInventoryItem newInv = new StoreInventoryItem(invId, productId, storeId, quantity, priceOverride);
-//                            inventoryService.addInventoryItem(newInv);
-//                            System.out.println("Inventory added successfully! Inventory ID: " + invId);
+                        case 3 -> {
+                            System.out.println("\n===== Restock Existing Item =====");
+                            System.out.print("Enter inventory ID to restock: ");
+                            int invId = Integer.parseInt(sc.nextLine());
+
+                            StoreInventoryItem inv = inventoryService.getById(invId);
+                            if (inv == null) {
+                                System.out.println("Inventory item not found.");
+                                break;
+                            }
+
+                            System.out.print("Enter quantity to add: ");
+                            int addQty = Integer.parseInt(sc.nextLine());
+                            if (addQty <= 0) {
+                                System.out.println("Invalid quantity.");
+                                break;
+                            }
+
+                            boolean success = inventoryService.adjustQuantity(invId, addQty);
+                            if (success)
+                                System.out.println("Successfully restocked! New quantity: " + (inv.getQuantity() + addQty));
+                            else
+                                System.out.println("Restock failed.");
                         }
                         case 4 -> {
+                            // Add Stock to Store
+                            var products = productService.getAllProducts();
+                            if (products.isEmpty()) {
+                                System.out.println("No products in catalog. Add products first.");
+                                break;
+                            }
+
+                            var stores = storeService.getAllStores();
+                            if (stores.isEmpty()) {
+                                System.out.println("No stores found. Add stores first.");
+                                break;
+                            }
+
+                            System.out.println("\nAvailable Products:");
+                            products.forEach(System.out::println);
+
+                            System.out.print("\nEnter product ID: ");
+                            int productId;
+                            try {
+                               productId = Integer.parseInt(sc.nextLine());
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid product ID.");
+                                break;
+                            }
+
+                            Product product = productService.getProductById(productId);
+                            if (product == null) {
+                                System.out.println("Product not found.");
+                                break;
+                            }
+
+                            System.out.println("\nAvailable Stores:");
+                            stores.forEach(System.out::println);
+
+                            System.out.print("\nEnter store ID: ");
+                            int storeId;
+                            try {
+                                storeId = Integer.parseInt(sc.nextLine());
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid store ID.");
+                                break;
+                            }
+
+                            Store store = storeService.getStoreById(storeId);
+                            if (store == null) {
+                                System.out.println("Store not found.");
+                                break;
+                            }
+
+                            // Check if inventory item already exists
+                            StoreInventoryItem existing = inventoryService.getByProductAndStore(productId, storeId);
+                            if (existing != null) {
+                                System.out.println("This product already has inventory at this store.");
+                                System.out.println("Current quantity: " + existing.getQuantity());
+                                System.out.print("Add more quantity? (y/n): ");
+                                String confirm = sc.nextLine().trim().toLowerCase();
+                                if (confirm.equals("y") || confirm.equals("yes")) {
+                                    System.out.print("Enter quantity to add: ");
+                                    int addQty;
+                                    try {
+                                        addQty = Integer.parseInt(sc.nextLine());
+                                        if (addQty > 0) {
+                                           inventoryService.adjustQuantity(existing.getId(), addQty);
+                                            System.out.println("Quantity added successfully! New quantity: " + (existing.getQuantity() + addQty));
+                                        } else {
+                                            System.out.println("Quantity must be positive.");
+                                        }
+                                    } catch (NumberFormatException e) {
+                                        System.out.println("Invalid quantity.");
+                                    }
+                                }
+                                break;
+                            }
+
+                            System.out.print("Enter quantity: ");
+                            int quantity;
+                            try {
+                                quantity = Integer.parseInt(sc.nextLine());
+                                if (quantity < 0) {
+                                    System.out.println("Quantity cannot be negative.");
+                                    break;
+                                }
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid quantity.");
+                                break;
+                            }
+
+                            System.out.print("Override price for this store? (y/n): ");
+                            String overrideChoice = sc.nextLine().trim().toLowerCase();
+                            Double priceOverride = null;
+                            if (overrideChoice.equals("y") || overrideChoice.equals("yes")) {
+                                System.out.print("Enter store-specific price: ");
+                                try {
+                                    priceOverride = Double.parseDouble(sc.nextLine());
+                                } catch (NumberFormatException e) {
+                                    System.out.println("Invalid price. Using catalog price.");
+                                }
+                            }
+
+                            int invId = inventoryService.getNextInventoryId();
+                            StoreInventoryItem newInv = new StoreInventoryItem(invId, productId, storeId, quantity, priceOverride);
+                            inventoryService.addInventoryItem(newInv);
+                            System.out.println("Inventory added successfully! Inventory ID: " + invId);
+                        }
+
+                        case 5 -> {
                             // Back to main menu
                         }
                         default -> System.out.println("Invalid option.");
@@ -1058,11 +1125,78 @@ public class Main {
                     System.out.println("✓ Transaction voided successfully.");
                 }
 
-
+                // View Total Revenue Summary
                 case 15 -> {
+                    System.out.println("\n===== Total Revenue Summary =====");
+                    salesService.printRevenueSummary(storeService, productService);
+                }
+
+                case 16 -> {
+                    System.out.println("\n===== Mark a Discontinued Item =====");
+                    //find item
+                    //remove item from products list
+                    //add item to discontinued list
+                    System.out.print("Enter item id: ");
+                    int id;
+                    try {
+                        id = Integer.parseInt(sc.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid item ID.");
+                        break;
+                    }
+                    Product p = productService.getProductById(id);
+                    productService.removeProduct(id);
+                    productService.addToDiscontinued(p);
+                    System.out.println("Marked " + id + " as discontinued.");
+
+
+                }
+
+                case 17 -> {
+                    System.out.println("\n===== Return an Item =====");
+                    //find Item ID
+                    //find Sale ID
+                    //remove sale from sales table
+                    //increment invenmtory for item ID
+                    System.out.print("Enter sale id: ");
+                    int saleID;
+                    try {
+                        saleID = Integer.parseInt(sc.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid sale ID.");
+                        break;
+                    }
+                    Sale returningSale = salesService.getSaleById(saleID);
+                    salesService.removeSale(saleID);
+                    StoreInventoryItem inventoryID = inventoryService.getByProductAndStore(returningSale.getProductId(), returningSale.getStoreId());
+                    inventoryService.adjustQuantity(inventoryID.getId(), returningSale.getQuantity());
+
+                }
+
+                case 18 -> {
+                    System.out.println("\n===== Reviving a Discontinued Item =====");
+                    //find item
+                    //remove item from products list
+                    //add item to discontinued list
+                    System.out.print("Enter item id: ");
+                    int id;
+                    try {
+                        id = Integer.parseInt(sc.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid item ID.");
+                        break;
+                    }
+                    Product p = productService.getDiscontinuedProduct(id);
+                    productService.removeDiscontinuedProduct(id);
+                    productService.addProduct(p);
+                    System.out.println("Revived " + id + " from the Discontinued Products.");
+                }
+
+                case 19 -> {
                     System.out.print("=== Goodbye ===");
                     running = false; // End program
                 }
+
 
                 default -> System.out.println("Invalid option. Please try again.");
             }
